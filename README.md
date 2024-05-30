@@ -30,15 +30,17 @@ This Rust program reads multiple files concurrently using Tokio for asynchronous
 ```bash
 cargo run ./file1.txt ./file2.txt
 ```
+## TODO
+
+[] pipe functionality.
+[] colorful output.
+[] more testing with various environments.
 
 ## Explanation
 
-- **main function:**
   - Parses command-line arguments to get a list of files.
   - Spawns asynchronous tasks to read each file concurrently using `task::spawn`.
   - Uses `tokio::join!` to wait for all tasks to complete.
-
-- **read_file function (async):**
   - Opens each file and creates a `BufReader`.
   - Wraps the reader in an `Arc<Mutex<BufReader<File>>>` to safely share across threads.
   - Uses `task::spawn_blocking` to perform blocking I/O operations (like file read) without blocking the Tokio runtime.
