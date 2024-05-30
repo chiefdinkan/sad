@@ -32,9 +32,9 @@ cargo run ./file1.txt ./file2.txt
 ```
 ## TODO
 
-[] pipe functionality.
-[] colorful output.
-[] more testing with various environments.
+- [] pipe functionality.
+- [] colorful output.
+- [] more testing with various environments.
 
 ## Explanation
 
