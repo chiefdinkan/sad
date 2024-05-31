@@ -22,8 +22,14 @@ async fn main() {
     while i < args.len() {
         if args[i] == "-c" {
             if i + 1 < args.len() {
-                color_code = Some(args[i + 1].clone());
-                i += 1;
+                let code = &args[i + 1];
+                if is_valid_hex_color(code) {
+                    color_code = Some(code.clone());
+                    i += 1;
+                } else {
+                    println!("Error: Invalid color code '{}'", code);
+                    std::process::exit(1);
+                }
             } else {
                 println!("Error: Missing color code after -c");
                 std::process::exit(1);
@@ -61,6 +67,10 @@ fn print_help() {
     println!("Usage: sad <file> [<file2> ...]");
     println!("       sad -c <color_hex_code> <file> [<file2> ...]");
     println!("Example: sad -c ff0000 file.txt");
+}
+
+fn is_valid_hex_color(code: &str) -> bool {
+    code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit())
 }
 
 async fn read_file(file: PathBuf, color_code: Option<String>) -> io::Result<()> {
