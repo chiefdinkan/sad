@@ -1,10 +1,10 @@
+use colored::*;
 use std::env;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tokio::task;
-use colored::*;
 
 #[tokio::main]
 async fn main() {
@@ -20,22 +20,25 @@ async fn main() {
     let mut i = 1;
 
     while i < args.len() {
-        if args[i] == "-c" {
+        if args[i] == "-c" || args[i] == "--color" {
             if i + 1 < args.len() {
                 let code = &args[i + 1];
                 if is_valid_hex_color(code) {
                     color_code = Some(code.clone());
                     i += 1;
                 } else {
-                    println!("Error: Invalid color code '{}'", code);
+                    eprintln!("Error: Invalid color code '{}'", code);
                     std::process::exit(1);
                 }
             } else {
-                println!("Error: Missing color code after -c");
+                eprintln!("Error: Missing color code after -c or --color");
                 std::process::exit(1);
             }
-        } else {
+        } else if !args[i].starts_with('-') {
             files.push(PathBuf::from(&args[i]));
+        } else {
+            eprintln!("Invalid flag {}.", args[i]);
+            std::process::exit(1);
         }
         i += 1;
     }
@@ -50,21 +53,22 @@ async fn main() {
         let color_code = color_code.clone();
         task::spawn(async move {
             if let Err(e) = read_file(file.clone(), color_code).await {
-                println!("Error reading {:?}: {}", file, e);
+                eprintln!("Error reading {:?}: {}", file, e);
             }
         })
     });
     let handles: Vec<_> = tasks.collect();
 
-    let _ = tokio::join!(async {
-        for handle in handles {
-            handle.await.unwrap();
+    for handle in handles {
+        if let Err(e) = handle.await {
+            eprintln!("Task failed: {:?}", e);
         }
-    });
+    }
 }
 
 fn print_help() {
     println!("Usage: sad <file> [<file2> ...]");
+    println!("Usage: -c or --color <hexcode>");
     println!("       sad -c <color_hex_code> <file> [<file2> ...]");
     println!("Example: sad -c ff0000 file.txt");
 }
@@ -86,23 +90,25 @@ async fn read_file(file: PathBuf, color_code: Option<String>) -> io::Result<()> 
 
     loop {
         let reader = Arc::clone(&reader);
-        let bytes_read = task::spawn_blocking(move || {
+        let result = task::spawn_blocking(move || {
             let mut reader = reader.lock().unwrap();
             let bytes_read = reader.read(&mut buffer)?;
             Ok::<_, io::Error>((bytes_read, buffer))
         })
-        .await
-        .expect("task failed")?;
+        .await;
 
-        let (bytes_read, buffer) = bytes_read;
+        match result {
+            Ok(Ok((bytes_read, buffer))) => {
+                if bytes_read == 0 {
+                    break;
+                }
 
-        if bytes_read == 0 {
-            break;
+                total_bytes_read += bytes_read;
+                content.extend_from_slice(&buffer[..bytes_read]);
+            }
+            Ok(Err(e)) => return Err(e),
+            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
         }
-
-        total_bytes_read += bytes_read;
-
-        content.extend_from_slice(&buffer[..bytes_read]);
     }
 
     let output = String::from_utf8_lossy(&content).to_string();
