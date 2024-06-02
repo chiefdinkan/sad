@@ -1,6 +1,6 @@
-# Asynchronous File Reader in Rust with Tokio
+# Sadge
 
-This Rust program reads multiple files concurrently using Tokio for asynchronous tasks. 
+This Rust program reads multiple files concurrently using Tokio for asynchronous tasks and outputs them in stdout . 
 
 1. **Clone the repository:**
 
