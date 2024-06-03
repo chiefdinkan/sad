@@ -23,7 +23,7 @@ This Rust program reads multiple files concurrently using Tokio for asynchronous
 
    Replace `<file1>`, `<file2>`, etc., with the paths to the files you want to read.
 
-## Or grab one from the releases(only x64 binary for linux right now)
+## Or grab one from the releases(only x64 binary for linux and windows available right now)
 
 ## Example
 
