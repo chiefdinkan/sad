@@ -1,63 +1,46 @@
-use std::env;
+use clap::{Arg, Command};
 use std::path::PathBuf;
 
 use crate::read;
 
-fn print_help() {
-    println!("Usage: sad <file> [<file2> ...]");
-    println!("Usage: -c or --color <hexcode>");
-    println!("       sad -c <color_hex_code> <file> [<file2> ...]");
-    println!("       Example: sad -c ff0000 file.txt");
-}
-
-pub struct Args {
+pub struct ArgsCf {
     pub color_code: Option<String>,
     pub files: Vec<PathBuf>,
 }
 
-pub fn help_args() -> Args {
-    let args: Vec<String> = env::args().collect();
+pub fn help_args() -> ArgsCf {
+    let matches = Command::new("sad")
+        .about("A command line tool for outputing text files")
+        .arg(
+            Arg::new("files")
+                .help("Input file(s)")
+                .required(true)
+                .num_args(1..),
+        )
+        .arg(
+            Arg::new("color")
+                .short('c')
+                .long("color")
+                .help("Hex color code")
+                .required(false)
+                .num_args(1),
+        )
+        .get_matches();
 
-    if args.len() < 2 {
-        print_help();
-        std::process::exit(1);
-    }
+    let color_code = matches.get_one::<String>("color").cloned();
 
-    let mut color_code = None;
-    let mut files = Vec::new();
-    let mut i = 1;
-
-    while i < args.len() {
-        if args[i] == "-c" || args[i] == "--color" {
-            if i + 1 < args.len() {
-                let code = &args[i + 1];
-                if read::is_valid_hex_color(code) {
-                    color_code = Some(code.clone());
-                    i += 1;
-                } else {
-                    eprintln!("Error: Invalid color code '{}'", code);
-                    std::process::exit(1);
-                }
-            } else {
-                eprintln!("Error: Missing color code after -c or --color");
-                std::process::exit(1);
-            }
-        } else if !args[i].starts_with('-') {
-            files.push(PathBuf::from(&args[i]));
-        } else {
-            eprintln!("Invalid flag {}.", args[i]);
+    if let Some(ref code) = color_code {
+        if !read::is_valid_hex_color(code) {
+            eprintln!("Error: Invalid color code '{}'", code);
             std::process::exit(1);
         }
-        i += 1;
     }
 
-    if files.is_empty() {
-        print_help();
-        std::process::exit(1);
-    }
+    let files = matches
+        .get_many::<String>("files")
+        .expect("required argument")
+        .map(PathBuf::from)
+        .collect();
 
-    Args {
-        color_code,
-        files,
-    }
+    ArgsCf { color_code, files }
 }

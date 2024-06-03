@@ -5,6 +5,7 @@ mod help;
 mod read;
 
 #[tokio::main]
+
 async fn main() {
     let args = help::help_args();
     let color_code = args.color_code;
