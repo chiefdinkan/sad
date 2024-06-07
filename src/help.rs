@@ -6,6 +6,7 @@ use crate::read;
 pub struct ArgsCf {
     pub color_code: Option<String>,
     pub files: Vec<PathBuf>,
+    pub line_number: bool,
 }
 
 pub fn help_args() -> ArgsCf {
@@ -25,6 +26,15 @@ pub fn help_args() -> ArgsCf {
                 .required(false)
                 .num_args(1),
         )
+        .arg(
+            Arg::new("number")
+                .long("line-number")
+                .overrides_with("number")
+                .short('l')
+                .action(clap::ArgAction::SetTrue)
+                .help("Show line numbers")
+                .long_help("Show the line numbers in the output"),
+        )
         .get_matches();
 
     let color_code = matches.get_one::<String>("color").cloned();
@@ -42,5 +52,11 @@ pub fn help_args() -> ArgsCf {
         .map(PathBuf::from)
         .collect();
 
-    ArgsCf { color_code, files }
+    let line_number = *matches.get_one::<bool>("number").unwrap_or(&false);
+
+    ArgsCf {
+        color_code,
+        files,
+        line_number,
+    }
 }
