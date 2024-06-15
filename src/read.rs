@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use tokio::task;
 
 pub fn is_valid_hex_color(code: &str) -> bool {
-    code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit()) // WHY???
+    code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit()) 
 }
 
 pub async fn read_file(
@@ -17,7 +17,7 @@ pub async fn read_file(
 ) -> io::Result<()> {
     let file_path = file.display().to_string();
 
-    let file = File::open(&file)?; // neat stuff
+    let file = File::open(&file)?; 
     let reader = BufReader::new(file);
     let reader = Arc::new(Mutex::new(reader));
     let mut content = Vec::new();
@@ -74,7 +74,7 @@ pub async fn read_file(
     } else {
         for (i, line) in lines.iter().enumerate() {
             if show_line_numbers {
-                println!("{:>4}: {}", i + 1, line); // this is some gourmet shi
+                println!("{:>4}: {}", i + 1, line); 
             } else {
                 println!("{}", line);
             }
