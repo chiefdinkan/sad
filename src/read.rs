@@ -1,5 +1,4 @@
-// Code needs major refac
-use colored::*;
+use colored::Colorize;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
 use std::path::PathBuf;
@@ -7,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use tokio::task;
 
 pub fn is_valid_hex_color(code: &str) -> bool {
-    code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit()) 
+    code.len() == 6 && code.chars().all(|c| c.is_ascii_hexdigit())
 }
 
 pub async fn read_file(
@@ -17,7 +16,7 @@ pub async fn read_file(
 ) -> io::Result<()> {
     let file_path = file.display().to_string();
 
-    let file = File::open(&file)?; 
+    let file = File::open(&file)?;
     let reader = BufReader::new(file);
     let reader = Arc::new(Mutex::new(reader));
     let mut content = Vec::new();
@@ -48,35 +47,30 @@ pub async fn read_file(
     let lines: Vec<_> = output.lines().collect();
 
     if let Some(color_code) = color_code {
-        // I am going to regret this in future {pls use match in future}
-        if show_line_numbers {
-            for (i, line) in lines.iter().enumerate() {
-                let colored_line_number = format!("{:>4}: ", i + 1).truecolor(
-                    u8::from_str_radix(&color_code[0..2], 16).unwrap(),
-                    u8::from_str_radix(&color_code[2..4], 16).unwrap(),
-                    u8::from_str_radix(&color_code[4..6], 16).unwrap(),
-                );
-                let colored_line = line.truecolor(
-                    u8::from_str_radix(&color_code[0..2], 16).unwrap(),
-                    u8::from_str_radix(&color_code[2..4], 16).unwrap(),
-                    u8::from_str_radix(&color_code[4..6], 16).unwrap(),
-                );
-                println!("{}{}", colored_line_number, colored_line);
+        let (r, g, b) = (
+            u8::from_str_radix(&color_code[0..2], 16).unwrap(),
+            u8::from_str_radix(&color_code[2..4], 16).unwrap(),
+            u8::from_str_radix(&color_code[4..6], 16).unwrap(),
+        );
+
+        match show_line_numbers {
+            true => {
+                for (i, line) in lines.iter().enumerate() {
+                    let colored_line_number = format!("{:>4}: ", i + 1).truecolor(r, g, b);
+                    let colored_line = line.truecolor(r, g, b);
+                    println!("{}{}", colored_line_number, colored_line);
+                }
             }
-        } else {
-            let colored_output = output.truecolor(
-                u8::from_str_radix(&color_code[0..2], 16).unwrap(),
-                u8::from_str_radix(&color_code[2..4], 16).unwrap(),
-                u8::from_str_radix(&color_code[4..6], 16).unwrap(),
-            );
-            println!("{}", colored_output);
+            false => {
+                let colored_output = output.truecolor(r, g, b);
+                println!("{}", colored_output);
+            }
         }
     } else {
         for (i, line) in lines.iter().enumerate() {
-            if show_line_numbers {
-                println!("{:>4}: {}", i + 1, line); 
-            } else {
-                println!("{}", line);
+            match show_line_numbers {
+                true => println!("{:>4}: {}", i + 1, line),
+                false => println!("{}", line),
             }
         }
     }
